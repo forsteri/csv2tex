@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+    <meta http-equiv="Content-Script-Type" content="text/javascript">
+    <title>CSV2TeX</title>
+
+    <!-- 
+      parseCSV()は，ここから
+      http://liosk.blog103.fc2.com/blog-entry-75.html
+    -->
+
+    <script type="text/javascript">
+<!---
+function parseCSV(text, delim) {
+  if (!delim) delim = ',';
+  var tokenizer = new RegExp(delim + '|\r?\n|[^' + delim + '"\r\n][^' + delim + '\r\n]*|"(?:[^"]|"")*"', 'g');
+
+      var record = 0, field = 0, data = [['']], qq = /""/g;
+      text.replace(/\r?\n$/, '').replace(tokenizer, function(token) {
+        switch (token) {
+          case delim: 
+            data[record][++field] = '';
+            break;
+          case '\n': case '\r\n':
+            data[++record] = [''];
+            field = 0;
+            break;
+          default:
+            data[record][field] = (token.charAt(0) != '"') ? token : token.slice(1, -1).replace(qq, '"');
+        }
+      });
+
+      return data;
+      }
+
+      function csv2tex(){
+        str0 = String(document.form.in0.value).replace(/\r\n?/g,"\n");
+
+        if (document.form.delimiter.selectedIndex == 1) {
+          delim = "\t";
+        } else {
+          delim = ",";
+        }
+
+        str0 = str0.replace(/\\/g,"\\textbackslash ");
+        str0 = str0.replace(/\#/g,"\\#");
+        str0 = str0.replace(/\$/g,"\\$");
+        str0 = str0.replace(/\%/g,"\\%");
+        str0 = str0.replace(/\&/g,"\\&");
+        str0 = str0.replace(/\_/g,"\\_");
+        str0 = str0.replace(/\{/g,"\\{");
+        str0 = str0.replace(/\}/g,"\\}");
+      str0 = str0.replace(/\~/g,"\\~{}");
+      str0 = str0.replace(/\^/g,"\\^{}");
+      str0 = str0.replace(/\|/g,"\\textbar ");
+
+      try{
+        csv = parseCSV(str0, delim);
+      }catch(e){
+        alert("error: Cannot parse CSV.");
+      }
+
+      maxcols=0;
+      outstr = "";
+      for (i=0; i<csv.length; i++) {
+        if (csv[i].length > maxcols)maxcols = csv[i].length;
+        for (j=0; j<csv[i].length; j++) {
+          outstr += csv[i][j];
+          if(j<csv[i].length - 1){
+            outstr += " & ";
+          }
+        }
+        outstr += "\\\\"+"\n";
+      }
+      document.form.out0.value = outstr;
+
+      //tabular
+      if (document.form.tabular.checked) {
+        for (lstr="",i=0;i<maxcols;i++,lstr+="l");
+        outstr = "\\begin{tabular}{" + lstr + "}" + "\n" + outstr + "\\end{tabular}"+"\n";
+      }
+
+      //label
+      if (document.form.label.checked) {
+        outstr = outstr + "\\label{"+document.form.labelstr.value+"}"+"\n";
+      }
+
+      //center
+      if (document.form.center.checked) {
+        outstr = "\\begin{center}\n" + outstr + "\\end{center}"+"\n"
+      }
+      //table
+      if (document.form.table.checked) {
+        if (document.form.htbp.value==""|| !document.form.place.checked) {
+          //caption
+          if (document.form.caption.checked) {
+          outstr = "\\begin{table}\n" + "\\caption{"+document.form.captionstr.value+"}"+"\n" + outstr + "\\end{table}"+"\n"
+          }
+          else {
+            outstr = "\\begin{table}\n" + outstr + "\\end{table}"+"\n"
+          }
+        } else {
+          if (document.form.caption.checked) {
+          outstr = "\\begin{table}["+document.form.htbp.value+"]\n" + "\\caption{"+document.form.captionstr.value+"}"+"\n" + outstr + "\\end{table}"+"\n"
+          }
+          else {
+          outstr = "\\begin{table}["+document.form.htbp.value+"]\n" + outstr + "\\end{table}"+"\n"
+          }
+        }
+      }
+
+      document.form.out0.value = outstr;
+      }
+//--->
+    </script>
+  </head>
+
+        <body>
+          <h1>CSV2TeX</h1>
+          <form name="form" action="javascript:csv2tex();">
+            <table>
+              <tr><td>Input:
+                  <select name="delimiter">
+                    <option selected>csv</option>
+                    <option>tab-delimited</option>
+                  </select>
+                </td>
+                <td>Output:</td></tr>
+              <tr><td><textarea rows="32" cols="60" name="in0" id="in0"></textarea></td>
+                <td><textarea rows="32" cols="60" name="out0" id="out0"></textarea></td>
+              </tr>
+            </table>
+
+            <div>Options:</div>
+            <table>
+              <tr>
+                <td><input type="checkbox" name="table" value="table" checked></td>
+                <td>\begin{table}...\end{table}</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" name="center" value="center" checked></td>
+                <td>\begin{center}...\end{center}</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" name="tabular" value="tabular" checked></td>
+                <td>\begin{tabular}...\end{tabular}</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" name="caption" value="caption"></td>
+                <td>\caption{}</td>
+                <td><input type="text" name="captionstr" value="***caption***"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" name="label" value="label"></td>
+                <td>\label{}</td>
+                <td><input type="text" name="labelstr" value="***label***"></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" name="place" value="place" checked></td>
+                <td>place:</td>
+                <td><input type="text" name="htbp" value="htbp"></td>
+              </tr>
+            </table>
+
+            <input type="button" name="btn" id="btn" value="CONVERT" onclick="csv2tex();" onkeypress="csv2tex();">
+          </form>
+        </body>
+</html>
+
